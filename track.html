@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+
+    main{
+        margin: 0;
+        padding: 0;
+    }
+
+    h1{
+        text-align: center;
+        font-size: 20px;
+        font-weight: 400px;
+    }
+
+    .response-widget{
+        margin: 0px auto;
+        margin-top: 10px;
+        max-height: 600px;
+        min-height: 200px;
+        max-width: 1000px;
+        width: 100%;
+        overflow-y: auto;
+        border-radius:5px;
+        box-shadow: 0 0 0 3px rgba(99,33,233, 0.3);
+        box-sizing: border-box;
+        display: none;
+    }
+
+    .timeline{
+         position: relative;
+         min-width: 320px;
+         width: 100%;
+    }
+
+    .timeline:before{
+        content: "";
+        position: absolute;
+        left: 50%;
+        width: 2px;
+        height: 100%;
+        background: #c5c5c5;
+    }
+
+    .timeline ul {
+        margin: 0;
+        padding: 0;
+    }
+
+    .timeline ul li {
+        list-style: none;
+        position: relative;
+        width: 50%;
+        padding: 20px 40px;
+        box-sizing: border-box;
+    }
+
+    .timeline ul li:nth-child(odd){
+        float: left;
+        text-align: right;
+        clear: both;
+    }
+
+    .timeline ul li:nth-child(even){
+        float: right;
+        text-align: left;
+        clear: both;
+    }
+
+    .content{
+        padding-bottom: 20px;
+    }
+
+    .timeline ul li:nth-child(odd):before {
+        content: '';
+        position: absolute;
+        top: 24px;
+        right: -6px;
+        width: 10px;
+        height: 10px;
+        background: rgba(99,33,233,1);
+        border-radius: 50%;
+        box-shadow: 0 0 0 3px rgba(99,33,233,0.2)
+    }
+
+    .timeline ul li:nth-child(even):before {
+        content: '';
+        position: absolute;
+        top: 24px;
+        left: -4px;
+        width: 10px;
+        height: 10px;
+        background: rgba(99,33,233,1);
+        border-radius: 50%;
+        box-shadow: 0 0 0 3px rgba(99,33,233,0.2)
+    }
+
+    .timeline ul li h3 {
+        margin: 0;
+        padding: 0;
+        font-weight: 400;
+        color: rgba(99,33,233,1)
+    }
+
+    .timeline ul li p {
+        margin: 10px 0 0;
+        padding: 0;
+    }
+
+    .timeline ul li .time h4 {
+        margin: 0;
+        padding: 0;
+        font-size: 14px;
+    }
+
+    .timeline ul li:nth-child(odd) .time {
+        position: absolute;
+        top: 12px;
+        right: -165px;
+        margin: 0;
+        padding: 8px 16px;
+        background: rgba(99,33,233,1);
+        color: #fff;
+        border-radius:18px;
+        box-shadow: 0 0 0 3px rgba(99,33,233,0.3);
+    }
+
+    .timeline ul li:nth-child(even) .time {
+        position: absolute;
+        top: 12px;
+        left: -165px;
+        margin: 0;
+        padding: 8px 16px;
+        background: rgba(99,33,233,1);
+        color: #fff;
+        border-radius:18px;
+        box-shadow: 0 0 0 3px rgba(99,33,233, 0.3);
+    }
+
+    /* width */
+    .response-widget::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+    }
+
+    /* Track */
+    .response-widget::-webkit-scrollbar-track {
+        box-shadow: inset 0 0 5px rgba(99,33,233,0.3); 
+        border-radius: 18px;
+    }
+    
+    /* Handle */
+    .response-widget::-webkit-scrollbar-thumb {
+        background: rgba(99,33,233,0.5); 
+        border-radius: 5px;
+    }
+
+    /* Handle on hover */
+    .response-widget::-webkit-scrollbar-thumb:hover {
+        background: rgba(99,33,233,1);
+    }
+
+    .user-label{
+        margin-bottom: 20px;
+        font-weight: bold;
+    }
+
+  .user-form{
+    display: flex;
+    max-width: 1000px;
+    min-width: 320px;
+    margin: auto;
+  }
+
+  .user-input{ 
+    width:100%;
+    padding: 15px;
+    margin-right: 4px;
+    border: 1px solid rgba(99,33,233,1);
+    border-radius: 5px;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(99,33,233,0.2)
+  }
+
+  .user-input:focus{
+    box-shadow: none;
+  }
+
+  .user-button{
+    padding: 15px;
+    margin-left: 4px;
+    background: rgba(99,33,233,1);
+    color: #fff;
+    border: 1px solid rgba(99,33,233,1);
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    white-space: nowrap;
+    box-shadow: 0 0 0 3px rgba(99,33,233,0.2);
+  }
+
+  .copy-right{
+    font-size: 11px;
+    text-align: right;
+    margin: 2px;
+    margin-top: 10px;
+  }
+
+  .order-details{
+    background: rgba(99,33,233,1);
+    color: #fff;
+    border: 1px solid rgba(99,33,233,1);
+    border-radius: 5px;
+    margin: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+  }
+
+  .order-details ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .order-details li {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+  }
+
+  .divider {
+        border-right: 1px solid #ccc;
+        margin: 5px;
+    }
+
+    @media (max-width: 1000px) {
+        .timeline {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 767px) {
+
+        h1{
+            text-align: center;
+            font-size: 10px;
+            padding: 0 20px; 
+        }
+
+        /* .response-widget{
+            
+        } */
+
+        .timeline {
+            padding-top: 40px;
+            margin-bottom: 10px;
+        }
+
+        .timeline:before{
+            left: 20px;
+        }
+
+        .timeline ul li:nth-child(odd),
+        .timeline ul li:nth-child(even){
+            width: 100%;
+            text-align: left;
+            padding-left: 50px;
+            padding-bottom: 50px;
+        }
+
+        .timeline ul li:nth-child(odd):before,
+        .timeline ul li:nth-child(even):before{
+            top: -18px;
+            left: 16px;
+
+        }
+
+        .timeline ul li:nth-child(odd) .time,
+        .timeline ul li:nth-child(even) .time {
+            top: -30px;
+            left: 50px;
+            right: inherit;
+        }
+
+        .order-details{
+            display: block;
+        }
+
+        .divider{
+            display: none;
+        }
+    }
+
+</style>
+<script>
+
+    // Function to handle Enter key press and click the button
+    function handleEnterKey(event) {
+        if (event.key === "Enter") {
+            event.preventDefault(); // Prevent the default form submission (if any)
+            document.querySelector(".user-button").click(); // Click the "Track" button
+        }
+    }
+
+    const getCheckpointListItem = (checkpoint) => {
+        let listItem = document.createElement("li");
+        let contentDiv = document.createElement("div");
+        constDiv.classList.add("content");
+        let heading = document.createElement("h3");
+        heading.textContent = "";
+    }
+
+    const fetchTrackingInfo = async (event) => {
+        event.preventDefault();
+
+        if(true) {
+            const id = document.getElementById("order_id").value;
+        
+            if(id !== ''){
+                // let response = await fetch("http://localhost:3000/data", {
+                //     method: 'GET',
+                //     redirect: 'follow'
+                // })
+                // response = await response.json();
+                // if(response?.msg?.checkpoints){
+
+                //     let timeline = document.getElementById("result-timeline").getElementsByTagName("ul")[0];
+                //     let checkpoints = response?.msg?.checkpoints
+
+                //     for(let i=0;i<checkpoints.length;i++){
+                //         timeline.insertBefore(getCheckpointListItem(checkpoints[i]), timeline.firstChild)
+                //     }
+                    
+                //     let resultDiv = document.getElementById("result");
+                //     resultDiv.style.display = "block";
+                // }
+
+                let resultDiv = document.getElementById("result");
+                resultDiv.style.display = "block";
+                
+            } else {
+                alert('Enter a valid order id')
+            }
+        }
+
+    }
+</script>
+</head>
+<body>
+<main id="tracking_widget_{{ section.id }}" class="tracking-widget">
+    
+    <section class="user-form">
+        <input type="text" id="order_id" class="user-input" placeholder="Enter your order id" onkeyup="handleEnterKey(event)" />
+        <button class="user-button" onclick="fetchTrackingInfo(event)" > Track </button>
+    </section>
+
+    <!-- <section class="response-widget" id="loader">
+        Processing...
+    </section> -->
+
+    <section class="response-widget" id="result">
+        
+        <div class="order-details" id="result-order-details">
+
+            <ul>
+                <li>
+                    <div>
+                        <span> Expected Delivery : </span>
+                        <span> 02-02-2023 </span>
+                    </div>
+                </li>
+                <li>
+                    <div>
+                        <span> Tracking Status : </span>
+                        <span> Delivered </span>
+                    </div>
+                </li>
+            </ul>
+
+            <div class="divider"></div>
+
+            <ul>
+                <li>
+                    <div>
+                        <span> Tracking Number : </span>
+                        <span> 5648821678 </span>
+                    </div>
+                </li>
+                <li>
+                    <div>
+                        <span> Order ID : </span>
+                        <span> 2467 </span>
+                    </div>
+                </li>
+            </ul>
+
+            <div class="divider"></div>
+
+            <ul>
+                <li>
+                    <div>
+                        <span> Shipped Via : </span>
+                        <span> Bluedart </span>
+                    </div>
+                </li>
+                <li>
+                    <div>
+                        <span> Customer Name : </span>
+                        <span> Alice </span>
+                    </div>
+                </li>
+            </ul>
+
+        </div>
+
+        <div class="timeline" id="result-timeline">
+            <ul>
+    
+                <li>
+                    <div class="content">
+                        <h3> Delivered To Consignee </h3>
+                        <p> Bangalore_hegdenagar_d (Karnataka) </p>
+                    </div>
+                    <div class="time"> <h4> 27 Jun 07:32 PM </h4> </div>
+                </li>
+    
+                <li>
+                    <div class="content">
+                        <h3> Out For Delivery </h3>
+                        <p> Bangalore_hegdenagar_d (Karnataka) </p>
+                    </div>
+                    <div class="time"> <h4> 27 Jun 10:11 AM </h4> </div>
+                </li>
+    
+                <li>
+                    <div class="content">
+                        <h3> Shipment Received At Facility </h3>
+                        <p> Bangalore_hegdenagar_d (Karnataka) </p>
+                    </div>
+                    <div class="time"> <h4> 25 Jun 01:12 PM </h4> </div>
+                </li>
+    
+                <li>
+                    <div class="content">
+                        <h3> Bag Received At Facility </h3>
+                        <p> Bangalore_hegdenagar_d (Karnataka) </p>
+                    </div>
+                    <div class="time"> <h4> 25 Jun 01:12 PM </h4> </div>
+                </li>
+    
+                <li>
+                    <div class="content">
+                        <h3> Vehicle Arrived </h3>
+                        <p> Bangalore_hegdenagar_d (Karnataka) </p>
+                    </div>
+                    <div class="time"> <h4> 25 Jun 01:09 PM </h4> </div>
+                </li>
+    
+                <li>
+                    <div class="content">
+                        <h3> Connected To Destination </h3>
+                        <p> Bangalore_soukyaroad_i (Karnataka) </p>
+                    </div>
+                    <div class="time"> <h4> 25 Jun 10:49 AM </h4> </div>
+                </li>
+    
+                <li>
+                    <div class="content">
+                        <h3> Bag Received At Facility </h3>
+                        <p> Bangalore_soukyaroad_i (Karnataka) </p>
+                    </div>
+                    <div class="time"> <h4> 25 Jun 05:49 AM </h4> </div>
+                </li>
+
+                <li>
+                    <div class="content">
+                        <h3> Bag Received At Facility </h3>
+                        <p> Bangalore_soukyaroad_i (Karnataka) </p>
+                    </div>
+                    <div class="time"> <h4> 25 Jun 05:49 AM </h4> </div>
+                </li>
+
+                <li>
+                    <div class="content">
+                        <h3> Bag Received At Facility </h3>
+                        <p> Bangalore_soukyaroad_i (Karnataka) </p>
+                    </div>
+                    <div class="time"> <h4> 25 Jun 05:49 AM </h4> </div>
+                </li>
+
+                <li>
+                    <div class="content">
+                        <h3> Bag Received At Facility </h3>
+                        <p> Bangalore_soukyaroad_i (Karnataka) </p>
+                    </div>
+                    <div class="time"> <h4> 25 Jun 05:49 AM </h4> </div>
+                </li>
+
+                <div style="clear:both"></div>
+
+            </ul>
+        </div>
+
+    </section>
+
+    <!-- <section class="response-widget" id="error">
+        <span id="error_response"> NA </span>
+    </section> -->
+
+    <footer class="copy-right"> 
+        <span> Powered by eShipz </span>
+    </footer>
+
+    <div class="response">
+        
+    </div>
+</main>
+</body>
+</html>
