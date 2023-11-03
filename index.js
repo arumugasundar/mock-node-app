@@ -20,6 +20,7 @@ router.get('/',async (req, res) => {
 
     try {
         const renderedContent = await engine.parseAndRender(liquidContent);
+        res.set({ 'Content-Type': 'application/liquid' });
         return res.status(200).send(renderedContent);
     } catch (error) {
         console.log('error :', error)
