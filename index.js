@@ -13,6 +13,7 @@ app.use(express.json({limit: '100mb'}));
 app.use(cookieParser());
 
 app.use('/assets', (req, res) => {
+    console.log('requested url :', req.url);
     const fileExtension = path.extname(req.url);
     if (fileExtension === '.css') {
         res.setHeader('Content-Type', 'text/css');
@@ -23,6 +24,7 @@ app.use('/assets', (req, res) => {
     }
 
     const file = path.join(__dirname, 'ui/dist/assets', req.url);
+    console.log('file to be shared :', file);
 
     return res.sendFile(file);
 });
