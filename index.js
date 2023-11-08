@@ -13,7 +13,6 @@ app.use(express.json({limit: '100mb'}));
 app.use(cookieParser());
 
 app.use('/assets', (req, res) => {
-  console.log('request came :', req.url);
     const fileExtension = path.extname(req.url);
     if (fileExtension === '.css') {
         res.setHeader('Content-Type', 'text/css');
@@ -28,12 +27,16 @@ app.use('/assets', (req, res) => {
     return res.sendFile(file);
 });
 
-app.get('/', (req, res) => {
-    const index = path.join(__dirname, '/ui/dist', 'index.html');
-    res.setHeader('Content-Type', 'application/liquid');
-    return res.sendFile(index);
+app.get('/', async (req, res) => {
+
+    const engine = new Liquid();
+    const liquidContent = fs.readFileSync('./content.liquid', 'utf-8');
+    const renderedContent = await engine.parseAndRender(liquidContent);
+    res.set({ 'Content-Type': 'application/liquid' });
+    return res.status(200).send(renderedContent);
+
 });
 
-const PORT = 80;
+const PORT = 3500;
 
 app.listen(PORT, () => {console.log(`Server running on port ${PORT}`)});
