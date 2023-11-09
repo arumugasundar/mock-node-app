@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en" style="font-size: 85%;">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta charset="utf-8">
+    <title>Order Tracking</title>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no, user-scalable=0">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="//stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.1.0/css/all.css"
+          integrity="sha384-lKuwvrZot6UHsBSfcMvOkWwlCMgc0TaWr+30HWe3a4ltaBwTZhyTEggF5tJv8tbt" crossorigin="anonymous">
+    <style type="text/css">
+        .boxed {
+            box-shadow: 0 0 7px 2px rgba(0,0,0,.05);
+        }
+        .container-fluid {
+            padding-left: 1% !important;
+            padding-right: 1% !important;
+        }
+    </style>
+
+</head>
+{% set bg_color = bg_color or request.args.get('bg-color') %}
+{% set bg_txt_color = bg_txt_color or request.args.get('bg-txt-color') %}
+<body style="background: {{- bg_color -}}; color: {{- bg_txt_color -}};">
+<div class="{% if smaller_view %}container-fluid {% else %} container {% endif %}">
+    <br/>
+    <div class="row justify-content-center">
+        <div class="col-sm-12">
+            <div class="col-sm-6" id="logo"></div>
+            <div class="col-sm-6" id="org_name"></div>
+        </div>
+        <div class="col-sm-12 col-md-10 col-lg-8">
+            <form class="card card-sm boxed" style="background: {{- bg_color -}}; color: {{- bg_txt_color -}};" action="{{request.path}}?{{request.query_string}}" method="post" id="track_form">
+                <div class="card-body row no-gutters align-items-center">
+                    <div class="col">
+                        <input class="form-control form-control-md form-control-borderless" id="tracking_number"
+                               type="text" id="tracking_number" placeholder="Enter the Order / Tracking Number"
+                               name="tracking_number" value="{{ request.args.get('q', '') | default('') }}">
+                        <input value={{token}} id="token_session" type="hidden">
+                    </div>
+                    <!--end of col-->
+                    <div class="col-auto">
+                        <button class="btn btn-md" type="button" id="search_btn" style="background-color: {{btn_color | default('#28a745')}}; border-color: {{btn_border|default('#28a745')}}; color: {{txt_color| default('#ffffff')}}"> Search
+                            <span id="spinner" class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true" style="display: none;"></span>
+                        </button>
+                    </div>
+                    <!--end of col-->
+                </div>
+            </form>
+        </div>
+        <!--end of col-->
+    </div>
+    <div class="row justify-content-center">
+        <div class="spinner-border" id="ringer" style="display:none" role="status">
+            <span class="sr-only">Loading...</span>
+        </div>
+    </div>
+    <script id="hidden-template" type="text/x-custom-template">
+        <br>
+        <div class="inner-container  container-fluid" style="max-height: 70vh; overflow-y: scroll; overflow-x: hidden;">
+            <div id="message" class="text-center"></div>
+            <div id="track_meta" style="display: none" class="row rounded border boxed">
+                <div class="col-sm"><span><b>Order </b></span><br class="d-none d-sm-block "><span id="order_number"></span></div>
+                <div class="col-sm"><span><b>Status </b></span><br class="d-none d-sm-block "><span id="tag"></span></div>
+                <div class="col-sm"><span><b>Tracking </b></span><br class="d-none d-sm-block "><span id="track_number"></span></div>
+                <div class="col-sm"><span><b>Carrier </b></span><br class="d-none d-sm-block "><span id="carrier"></span></div>
+                <div class="col-sm" style="display: none;" title="Expected Delivery Date" id="est_display"><span><b>Exp. Delivery By <sup>*</sup></b></span><br class="d-none d-sm-block "><span id="edd"></span></div>
+                <div class="col-sm" style="display: none;" title="Delivery Date" id="del_display"><span><b>Delivered On <sup>*</sup></b></span><br class="d-none d-sm-block "><span id="del_date"></span></div>
+            </div>
+            <br>
+            <div class="table-responsive">
+                <table class="table table-bordered rounded boxed" style="display:none; font-size: 0.8em;background: {{- bg_color -}}; color: {{- bg_txt_color -}};">
+                    <thead class="thead-light">
+                    <tr>
+                        <th class="d-none d-sm-block " scope="col" style="background-color: {{btn_color | default('#28a745')}}; border-color: {{btn_border|default('#28a745')}}; color: {{txt_color| default('#ffffff')}}">#</th>
+                        <th scope="col" style="background-color: {{btn_color | default('#28a745')}}; border-color: {{btn_border|default('#28a745')}}; color: {{txt_color| default('#ffffff')}}">Date</th>
+                        <th scope="col" style="background-color: {{btn_color | default('#28a745')}}; border-color: {{btn_border|default('#28a745')}}; color: {{txt_color| default('#ffffff')}}">City</th>
+                        <th scope="col" style="background-color: {{btn_color | default('#28a745')}}; border-color: {{btn_border|default('#28a745')}}; color: {{txt_color| default('#ffffff')}}">Remark</th>
+                    </tr>
+                    </thead>
+                    <tbody id="checkpoints">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </script>
+    <div class="text-right success"><strong><span id="cloned_orders"></span></strong></div>
+    <div id="trackings_container">
+    </div>
+    <span style="font-size: 0.75em; display: none; float: right; color: #007e88;" class="pull-right" id="branding">Powered By <a href="https://www.eshipz.com/?utm_source=partner&utm_medium=track_widget&utm_campaign=track&utm_content=link" target="_blank">eShipz</a></span>
+</div>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/js/lib/moment.min.js"></script>
+<script>
+    $(document).ready(function () {
+
+        var reset_fields = function() {
+            $(".table").hide();
+            $('#track_meta').hide();
+            $("#checkpoints").empty();
+            $("#cloned_orders").empty();
+            $("#trackings_container").empty();
+            $('#message').text('');
+            $('#order_number').text('');
+            $('#tag').text('');
+            $('#edd').text('');
+            $('#del_date').text('');
+            $('#track_number').text('');
+            $('#carrier').text('');
+            $('#branding').hide();
+            $('#del_display').hide();
+            $('#est_display').hide();
+        };
+        var action_button = function (e) {
+            var trackNumber = $("input:text").val();
+            var session_token = $("#token_session").val();
+            e.preventDefault();
+            reset_fields();
+            // alert(session_token);
+            if (trackNumber && null !== trackNumber && undefined !== trackNumber) {
+                $('#spinner').show();
+                $.ajax({
+                    url: "/track-widget/" + session_token + '?order-fallback={{ request.args.get('order-fallback') }}&cos={{ request.args.get('cos', 'n') }}',
+                    method: "POST",
+                    data: JSON.stringify({"q_num": trackNumber.trim()}),
+                    dataType: 'json',
+                    contentType: "application/json",
+                    success: function (response, status, jqXHR) {
+                        var results = [];
+                        if (response && undefined === response.length) {
+                            results.push(response);
+                        }
+                        else {
+                            results = response;
+                        }
+                        if (results.length > 0 && results.length != trackNumber.trim().split(',').length){
+                            $("#cloned_orders").html("Note: Some of your items might have been dispatched as multiple boxes.");
+                        }
+                        $('#spinner').hide();
+                        $.each(results, function(index, result) {
+                          var template = $('#hidden-template').html();
+                          template = template.replace('del_display', 'del_display_' + index.toString()).replace('est_display', 'est_display_' + index.toString()).replace('order_number', 'order_number_' + index.toString()).replace('tag', 'tag_' + index.toString()).replace('track_number', 'track_number_' + index.toString()).replace('carrier', 'carrier_' + index.toString()).replace('edd', 'edd_' + index.toString()).replace('checkpoints', 'checkpoints_' + index.toString()).replace('track_meta', 'track_meta_' + index.toString()).replace('message', 'message_' + index.toString()).replace('del_date', 'del_date_' + index.toString());
+                          $('#trackings_container').append(template);
+                            var checkpoints = result['checkpoints'] || [], order_id = result['order_id'] || '',
+                                tracking_number = result['tracking_number'] || '', slug = result['slug'] || '',
+                                tag = result['tag'] || '', delivery_date = result['delivery_date'] || '',
+                                edd = result['expected_delivery_date'] || '', t_msg = '';
+                            if(null !== edd && undefined !== edd) {
+                               edd = edd.replace(' 00:00:00 GMT', '');
+                               edd = edd.replace('GMT', 'IST');
+                            }
+                            if(null !== delivery_date && undefined !== delivery_date) {
+                               delivery_date = delivery_date.replace(' 00:00:00 GMT', '');
+                               delivery_date = delivery_date.replace('GMT', 'IST');
+                            }
+                            if(0 === Object.keys(result).length) {
+                                t_msg = 'The tracking information is currently not available. Please recheck your Order Id / Tracking Number.'
+                            }
+                            $.each(checkpoints, function (c_index, value) {
+                                // alert(value.date);
+                                var checkpoint_date = value.date, city = value.city, remark = value.remark;
+                                if('-N.A-' !== checkpoint_date) {
+                                    checkpoint_date = new Date(checkpoint_date).toUTCString();
+                                    checkpoint_date = checkpoint_date.replace('GMT', '');
+                                }
+                                if(null === checkpoint_date) {
+                                    checkpoint_date = '-N.A-'
+                                }
+                                if(null === tag) {
+                                    tag = '-N.A-'
+                                }
+                                if (null == remark) {
+                                    remark = '-N.A-'
+                                }
+                                if (null == city) {
+                                    city = '-N.A-'
+                                }
+                                var tBody = '<tr><td scope="row" class="d-none d-sm-block ">' + (c_index + 1) + '</td><td>' + checkpoint_date + '</td><td>' + city.replaceAll('_', ' ') + '</td><td>' + remark + '</td></tr>';
+                                $("#checkpoints_" + index.toString()).append(tBody)
+                            });
+
+                            if(checkpoints && checkpoints.length > 0) {
+                                t_msg = '';
+                                $(".table").show();
+                                $('#order_number_' + index.toString()).text(order_id.toString().replaceAll('-CLONE', '').replaceAll('-clone', ''));
+                                $('#edd_' + index.toString()).text(edd);
+                                $('#del_date_' + index.toString()).text(delivery_date);
+                                $('#tag_' + index.toString()).text(tag);
+                                $('#track_number_' + index.toString()).text(tracking_number);
+                                $('#carrier_' + index.toString()).text(slug.toUpperCase());
+                                $('#track_meta_' + index.toString()).show();
+                                $('#branding').show();
+                                if ('Delivered' == tag) {
+                                    $('#est_display_' + index.toString()).hide();
+                                    $('#del_display_' + index.toString()).show();
+                                } else {
+                                    $('#del_display_' + index.toString()).hide();
+                                    if (edd) {
+                                        $('#est_display_' + index.toString()).show();
+                                    } else {
+                                        $('#est_display_' + index.toString()).hide();
+                                    }
+                                }
+                            }
+                            else if(null === slug || undefined === slug || '' === slug) {
+                                if(order_id) {
+                                    t_msg = 'Your Order '.concat(order_id || '').concat(' has been received and is under processing.');
+                                }
+                                else {
+                                    t_msg = 'The tracking information is currently not available. Please try after a while.';
+                                }
+                            }
+                                $('#message_' + index.toString()).text(t_msg);
+                            })
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        $('#spinner').hide();
+                        if (jqXHR && 500 === jqXHR.status) {
+                            alert('Oops ! Some Details Appear not to be right');
+                        } else {
+                            alert('Oops ! Some Details Appear not to be right');
+                        }
+                        //Do something
+                    }
+                })
+            }
+        };
+
+        $("#track_form").off('submit').on('submit', action_button);
+        $("#search_btn").off('click').on('click', action_button);
+        if($('#tracking_number').val()) {
+            $("#search_btn").trigger('click');
+        }
+    });
+</script>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PXLQ4D1YNB"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date()); gtag('config', 'G-PXLQ4D1YNB');
+    </script>
+    <!-- End Inspectlet Asynchronous Code -->
+</body>
+
+</html>
