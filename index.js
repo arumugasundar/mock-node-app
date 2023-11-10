@@ -31,21 +31,13 @@ app.use('/assets', (req, res) => {
 
 app.get('/', async (req, res) => {
 
+    // console.log('request info :', req);
+    console.log('params :', req.params);
+    console.log('query :', req.query);
+
     const engine = new Liquid();
     const liquidContent = fs.readFileSync('./content.liquid', 'utf-8');
-    let response = null;
-    try {
-        response = await fetch("https://qa-eshipz.herokuapp.com/track-widget/5343662b-5b86-4ea0-abb6-33d4a4b37f5c/liquid", {
-            method: 'GET',
-            redirect: 'follow'
-          });
-        response = await response.text();
-    } catch (error) {
-        console.log('error :', error);
-    }
-
-
-    const renderedContent = await engine.parseAndRender(response ?? '');
+    const renderedContent = await engine.parseAndRender(liquidContent);
     res.set({ 'Content-Type': 'application/liquid' });
     return res.status(200).send(renderedContent);
 
