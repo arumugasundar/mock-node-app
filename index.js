@@ -32,7 +32,7 @@ app.use('/assets', (req, res) => {
 app.get('/', async (req, res) => {
 
     // console.log('request info :', req);
-    console.log('params :', req.params);
+    console.log('headers :', req.headers);
     console.log('query :', req.query);
 
     const engine = new Liquid();
@@ -43,6 +43,6 @@ app.get('/', async (req, res) => {
 
 });
 
-const PORT = 80;
+const PORT = 3500;
 
 app.listen(PORT, () => {console.log(`Server running on port ${PORT}`)});
