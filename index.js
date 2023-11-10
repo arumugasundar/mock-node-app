@@ -1,4 +1,5 @@
 const express = require('express');
+const crypto = require('crypto');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const fs = require('fs');
@@ -12,34 +13,35 @@ app.use(express.urlencoded({ extended : true, limit: '100mb'}));
 app.use(express.json({limit: '100mb'}));
 app.use(cookieParser());
 
-app.use('/assets', (req, res) => {
-
-    console.log('requested url :', req.url);
-    const fileExtension = path.extname(req.url);
-    if (fileExtension === '.css') {
-        res.setHeader('Content-Type', 'text/css');
-    } else if(fileExtension === '.js'){
-        res.setHeader('Content-Type', 'text/javascript');
-    } else if (fileExtension === '.svg') {
-        res.setHeader('Content-Type', 'image/svg+xml');
-    }
-    const file = path.join(__dirname, 'ui/dist/assets', req.url);
-    console.log('file to be shared :', file);
-
-    return res.sendFile(file);
-});
-
 app.get('/', async (req, res) => {
 
-    // console.log('request info :', req);
-    console.log('headers :', req.headers);
-    console.log('query :', req.query);
+    if(Object.entries(req.query).length > 0){
+        
+        const SHARED_SECRET = 'hush';
 
-    const engine = new Liquid();
-    const liquidContent = fs.readFileSync('./content.liquid', 'utf-8');
-    const renderedContent = await engine.parseAndRender(liquidContent);
-    res.set({ 'Content-Type': 'application/liquid' });
-    return res.status(200).send(renderedContent);
+        let query = req.query;
+        let signature = query.signature;
+        delete query.signature;
+        let sorted_params = Object.entries(query).map(([key, value]) => `${key}=${Array.isArray(value) ? value.join(',') : value}`).sort().join('');
+        console.log('sorted params :', sorted_params);
+        let calculated_signature = crypto.createHmac('sha256', SHARED_SECRET).update(sorted_params).digest('hex');
+
+        if (signature !== calculated_signature) {
+            return res.status(401).send('Invalid signature');
+        } else {
+            console.log('Signature is valid');
+            const engine = new Liquid();
+            const liquidContent = fs.readFileSync('./content.liquid', 'utf-8');
+            const renderedContent = await engine.parseAndRender(liquidContent);
+            res.set({ 'Content-Type': 'application/liquid' });
+            return res.status(200).send(renderedContent);
+        }
+
+    } else {
+        return res.status(400).send('Invalid request');
+    }
+
+    
 
 });
 
