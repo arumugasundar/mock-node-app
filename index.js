@@ -25,6 +25,7 @@ app.get('/', async (req, res) => {
         let sorted_params = Object.entries(query).map(([key, value]) => `${key}=${Array.isArray(value) ? value.join(',') : value}`).sort().join('');
         console.log('sorted params :', sorted_params);
         let calculated_signature = crypto.createHmac('sha256', SHARED_SECRET).update(sorted_params).digest('hex');
+        console.log('calculated signature :', calculated_signature);
 
         if (signature !== calculated_signature) {
             return res.status(401).send('Invalid signature');
