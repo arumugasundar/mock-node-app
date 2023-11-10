@@ -18,17 +18,21 @@ app.use(cookieParser());
 app.get('/', async (req, res) => {
 
     let query = req.query;
-    let signature = query.signature;
-    console.log('existing signature :', signature);
+    let existing_signature = query.signature;
     delete query.signature;
     
     let formatted = Object.entries(query).map(([key, value]) => `${key}=${Array.isArray(value) ? value.join(',') : value}`).sort().join('');
-    console.log('formatted uri :', formatted)
+    let computed_signature = crypto.createHmac('sha256', process.env.SHOPIFY_APP_SECRET).update(formatted, 'utf-8').digest('hex');
 
-    let computedSignature = crypto.createHmac('sha256', process.env.SHOPIFY_APP_SECRET).update(formatted, 'utf-8').digest('hex')
-    console.log('computer signature :', computedSignature);
-
-    return res.status(200).send('under construction');
+    if(existing_signature === computed_signature){
+        const engine = new Liquid();
+        const liquidContent = fs.readFileSync('./content.liquid', 'utf-8');
+        const renderedContent = await engine.parseAndRender(liquidContent);
+        res.set({ 'Content-Type': 'application/liquid' });
+        return res.status(200).send(renderedContent);
+    } else {
+        return res.status(403).send('forbidden');
+    }
 
 });
 
