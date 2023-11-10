@@ -6,6 +6,8 @@ const fs = require('fs');
 const { Liquid } = require('liquidjs');
 const path = require('path');
 
+require('dotenv').config();
+
 const app = express();
 
 app.use(cors());
@@ -15,44 +17,28 @@ app.use(cookieParser());
 
 app.get('/', async (req, res) => {
 
-    if(Object.entries(req.query).length > 0){
-        
-        const SHARED_SECRET = 'hush';
+    let query = req.query;
+    let signature = query.signature;
+    console.log('signature :', signature);
+    delete query.signature;
 
-        let query = req.query;
-        let signature = query.signature;
-        console.log('signature :', signature);
-        delete query.signature;
+    let original = "extra=1&extra=2&shop=shop-name.myshopify.com&path_prefix=%2Fapps%2Fawesome_reviews&timestamp=1317327555&signature=f21b923e9e24befdafcb649dbb408b2dfd357c9ecbf49f791135b0aed10984f1";
+    let formatted = original.replace(/&signature=[^&]*/, "").split("&").sort().join("")
+    let formatted1 = Object.entries(query).map(([key, value]) => `${key}=${Array.isArray(value) ? value.join(',') : value}`).sort().join('');
+    console.log('formatted :', formatted)
+    console.log('formatted 1 :', formatted1)
+    let computedSignature = crypto.createHmac('sha256', process.env.SHOPIFY_APP_SECRET).update(formatted1, 'utf-8').digest('hex')
+    console.log('computer signature :', computedSignature);
 
-        let sorted_params = Object.entries(query).map(([key, value]) => `${key}=${Array.isArray(value) ? value.join(',') : value}`).sort().join('');
-        console.log('sorted params :', sorted_params);
-        let calculated_signature = crypto.createHmac('sha256', SHARED_SECRET).update(sorted_params).digest('hex');
-        console.log('calculated signature :', calculated_signature);
+    return res.status(200).send('under construction');
 
-        let sorted_params1 = Object.entries(req.query).map(([key, value]) => `${key}=${Array.isArray(value) ? value.join(',') : value}`).sort().join('');
-        console.log('sorted params (with signature) :', sorted_params1);
-        let calculated_signature1 = crypto.createHmac('sha256', SHARED_SECRET).update(sorted_params).digest('hex');
-        console.log('calculated signature (with signature) :', calculated_signature1);
+    // if(Object.entries(req.query).length > 0){
 
-        if (signature !== calculated_signature) {
-            return res.status(401).send('Invalid signature');
-        } else {
-            console.log('Signature is valid');
-            const engine = new Liquid();
-            const liquidContent = fs.readFileSync('./content.liquid', 'utf-8');
-            const renderedContent = await engine.parseAndRender(liquidContent);
-            res.set({ 'Content-Type': 'application/liquid' });
-            return res.status(200).send(renderedContent);
-        }
-
-    } else {
-        return res.status(400).send('Invalid request');
-    }
-
-    
-
+    // } else {
+    //     return res.status(400).send('Invalid request');
+    // }
 });
 
-const PORT = 3500;
+const PORT = 80;
 
 app.listen(PORT, () => {console.log(`Server running on port ${PORT}`)});
